@@ -1,0 +1,13 @@
+{
+  "name": "domo-actors-bank-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "DomoActors Bank Example - Demonstrates actor patterns",
+  "scripts": {
+    "start": "node ../../dist-examples/examples/bank/bank.js"
+  },
+  "dependencies": {
+    "domo-actors": "file:../.."
+  }
+}
