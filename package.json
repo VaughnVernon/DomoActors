@@ -1,0 +1,73 @@
+{
+  "name": "domo-actors",
+  "version": "1.0.0",
+  "description": "Production-ready Actor Model toolkit for TypeScript - Fault-tolerant, message-driven concurrency",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "build:examples": "tsc -p tsconfig.examples.json",
+    "example:bank": "npm run build && tsx examples/bank/bank.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf dist dist-examples",
+    "docs": "typedoc",
+    "docs:serve": "npx http-server docs/api -o",
+    "prepublishOnly": "npm run clean && npm run build && npm test",
+    "preversion": "npm test",
+    "postversion": "git push && git push --tags"
+  },
+  "keywords": [
+    "actor",
+    "actor-model",
+    "actors",
+    "concurrent",
+    "concurrency",
+    "message-driven",
+    "fault-tolerant",
+    "supervision",
+    "typescript",
+    "reactive",
+    "asynchronous",
+    "event-driven",
+    "ddd",
+    "domain-driven-design"
+  ],
+  "author": "Vaughn Vernon",
+  "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VaughnVernon/DomoActors.git"
+  },
+  "bugs": {
+    "url": "https://github.com/VaughnVernon/DomoActors/issues"
+  },
+  "homepage": "https://github.com/VaughnVernon/DomoActors#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "@vitest/coverage-v8": "^2.1.8",
+    "tsx": "^4.20.6",
+    "typedoc": "^0.28.14",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "dependencies": {
+    "uuidv7": "^1.0.2"
+  }
+}

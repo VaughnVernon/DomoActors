@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm test:*)",
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:docs.vlingo.io)",
+      "WebSearch",
+      "Read(//home/vlv/Products/Xoom/xoom-actors/src/main/java/io/vlingo/xoom/actors/**)",
+      "Read(//home/vlv/Products/Xoom/xoom-actors/**)",
+      "Read(//home/vlv/Products/Xoom/**)",
+      "Bash(npm run build:*)",
+      "Bash(npm run docs:*)",
+      "Bash(npm view:*)",
+      "Bash(npm run build:examples:*)",
+      "Bash(timeout 30 npm test:*)",
+      "Bash(timeout 45 npm test:*)"
+    ]
+  },
+  "outputStyle": "default",
+  "sandbox": {
+    "excludedCommands": [
+      "rm",
+      "rmdir"
+    ],
+    "autoAllowBashIfSandboxed": true,
+    "enabled": true
+  },
+  "spinnerTipsEnabled": false
+}
