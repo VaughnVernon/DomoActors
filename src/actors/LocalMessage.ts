@@ -100,6 +100,7 @@ export class LocalMessage implements Message {
     // This allows supervisors to access the context via supervised.actor().environment().executionContext()
     const environment = actor.lifeCycle().environment()
     environment.setCurrentMessageExecutionContext(this._executionContext)
+    this._executionContext.propagate()
 
     try {
       const result = await this.function()(actor)
@@ -109,7 +110,7 @@ export class LocalMessage implements Message {
       const errorObj = error instanceof Error ? error : new Error(String(error))
 
       // Log the error
-      actor.logger().error(`Message processing failed: ${errorObj.message}`, errorObj)
+      actor.logger().error(`Message processing failed: ${errorObj.message}\n`, errorObj)
 
       // 1. Reject the caller's promise (message failed, caller must know)
       this._deferred.reject(errorObj)
