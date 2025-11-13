@@ -1,6 +1,6 @@
 {
   "name": "domo-actors",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Production-ready Actor Model toolkit for TypeScript - Fault-tolerant, message-driven concurrency",
   "type": "module",
   "main": "./dist/index.js",
