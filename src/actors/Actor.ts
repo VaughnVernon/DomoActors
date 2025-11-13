@@ -248,7 +248,7 @@ export abstract class Actor extends LifeCycle implements ActorProtocol {
    * @returns String representation
    */
   toString(): string {
-    return Actor.id(this)
+    return `${this.type()}: ${Actor.id(this)}`
   }
 
   //================================
@@ -264,7 +264,7 @@ export abstract class Actor extends LifeCycle implements ActorProtocol {
    * Delegates to stage.actorFor() with:
    * - This actor's proxy as the parent
    * - Parameters from the definition
-   * - Default supervisor (inherits from parent's environment)
+   * - Optional supervisor name (defaults to parent's supervisor if not specified)
    * - Default mailbox (ArrayMailbox)
    *
    * Note: The definition's address is not used - the stage generates a new unique address.
@@ -273,9 +273,10 @@ export abstract class Actor extends LifeCycle implements ActorProtocol {
    * @template T The protocol interface type
    * @param protocol The protocol for the child actor (defines type and instantiation)
    * @param definition The definition containing constructor parameters
+   * @param supervisorName Optional name of supervisor actor (defaults to parent's supervisor)
    * @returns Child actor proxy implementing the protocol interface
    */
-  protected childActorFor<T>(protocol: Protocol, definition: Definition): T {
+  protected childActorFor<T>(protocol: Protocol, definition: Definition, supervisorName?: string): T {
     // Look up our own proxy from the directory to use as parent.
     // This is synchronous and safe - we're already registered in the directory.
     const stageInternal = this.stage() as StageInternal
@@ -284,7 +285,7 @@ export abstract class Actor extends LifeCycle implements ActorProtocol {
     return this.stage().actorFor<T>(
       protocol,
       parentProxy,  // Use the proxy as parent, not the raw actor
-      undefined,  // use default supervisor
+      supervisorName,  // use specified supervisor or default
       undefined,  // use default mailbox
       ...definition.parameters()  // spread constructor parameters from definition
     )
