@@ -74,6 +74,253 @@ The transfer coordinator implements a realistic banking transfer with intermedia
 
 Each arrow represents an **async message** through the mailbox, not a direct call.
 
+### Transfer Details
+
+The transfer system demonstrates a sophisticated multi-actor coordination pattern with **self-messaging**, **retry logic**, and **compensating transactions**. Here's the complete flow:
+
+#### Actors Involved
+
+1. **TellerActor** - User interface, validates input
+2. **BankActor** - Validates business rules, delegates to coordinator
+3. **TransferCoordinatorActor** - Orchestrates the multi-step transfer process
+4. **AccountActor (2 instances)** - Source and destination accounts
+5. **TransactionHistoryActor** - Records each account's transaction history
+
+#### Transfer Flow - Happy Path
+
+```
+User → Teller → Bank → TransferCoordinator → Accounts
+```
+
+**Step-by-Step Process:**
+
+**1. User Initiates Transfer** (via TellerActor)
+```typescript
+// TellerActor.transfer()
+await this.bank.transfer(fromAccountId, toAccountId, amount)
+```
+- Validates input (amount is number, IDs not empty)
+- Forwards to Bank
+
+**2. Bank Validates Business Rules** (BankActor)
+```typescript
+// BankActor.transfer()
+- Validates amount > 0
+- Validates fromAccountId ≠ toAccountId
+- Validates both accounts exist
+- Delegates to TransferCoordinator
+```
+
+**3. Transfer Coordinator Executes 3-Phase Transfer** (TransferCoordinatorActor)
+
+This is where the magic happens using **self-messaging** to create a state machine:
+
+**Phase 1: Withdraw**
+```typescript
+// Synchronous - happens immediately
+const fromAccount = this.accounts.get(fromAccountId)
+await fromAccount.withdraw(amount)  // Throws if insufficient funds
+```
+- Withdraws funds from source account
+- AccountActor reduces balance and records transaction
+- **Critical**: If this fails, transfer stops (no cleanup needed)
+
+**Phase 2: Record Pending**
+```typescript
+// ASYNC - self-message via mailbox
+this.self.recordPendingTransfer({
+  transactionId,
+  fromAccountId,
+  toAccountId,
+  amount,
+  status: 'withdrawn',  // Funds withdrawn but not yet deposited
+  withdrawnAt: new Date(),
+  attempts: 0
+})
+```
+- Stores transfer in pending state
+- This ensures we can recover if deposit fails
+- Happens asynchronously through mailbox
+
+**Phase 3: Attempt Deposit**
+```typescript
+// ASYNC - self-message via mailbox
+this.self.attemptDeposit(transactionId)
+
+// When processed:
+await toAccount.deposit(transfer.amount)
+this.self.completeTransfer(transactionId)  // Success!
+```
+- Deposits funds to destination account
+- If successful, marks transfer complete
+- If fails, triggers retry logic
+
+#### Transfer Flow - Failure & Recovery
+
+**Deposit Failure Handling**
+
+If deposit fails (network error, account closed, etc.):
+
+**Retry Logic with Exponential Backoff:**
+```typescript
+// handleDepositFailure()
+if (attempts < 3) {
+  const delay = 1000ms * 2^(attempts-1)  // 1s, 2s, 4s
+
+  // Schedule retry
+  scheduler.scheduleOnce(
+    () => this.self.attemptDeposit(transactionId),
+    delay
+  )
+}
+```
+- Attempt 1: Retry after 1 second
+- Attempt 2: Retry after 2 seconds
+- Attempt 3: Retry after 4 seconds
+
+**Compensating Transaction (Refund):**
+```typescript
+// If max retries exceeded
+if (attempts >= 3) {
+  this.self.processRefund(transactionId, reason)
+}
+
+// processRefund()
+await fromAccount.refund(amount, transactionId, reason)
+this.self.completeTransfer(transactionId)
+```
+- Returns funds to source account
+- Records refund transaction with reason
+- Marks transfer as 'refunded'
+
+#### Key Design Patterns Demonstrated
+
+**1. Self-Messaging State Machine**
+```typescript
+// All state transitions go through mailbox
+this.self.recordPendingTransfer(...)  // State: withdrawn
+this.self.attemptDeposit(...)         // State: attempting deposit
+this.self.completeTransfer(...)       // State: completed
+this.self.processRefund(...)          // State: refunded
+```
+- Maintains actor model semantics
+- Each step is a separate message
+- No race conditions
+
+**2. Eventual Consistency**
+```typescript
+initiateTransfer() {
+  await fromAccount.withdraw()  // Synchronous - must succeed
+  this.self.recordPending(...)   // Async - will happen soon
+  this.self.attemptDeposit(...)  // Async - will happen after
+}
+```
+- Withdraw is immediate (strong consistency)
+- Rest of flow is eventual (resilient to failures)
+
+**3. Saga Pattern (Compensating Transactions)**
+```
+Success Path:  Withdraw → Deposit → Complete
+Failure Path:  Withdraw → Deposit (fails) → Retry → Refund → Complete
+```
+
+**4. Retry with Exponential Backoff**
+```
+Attempt 1: Immediate
+Attempt 2: +1s delay
+Attempt 3: +2s delay
+Attempt 4: +4s delay
+Then: Refund
+```
+
+#### Transaction States
+
+```typescript
+type TransferStatus =
+  | 'withdrawn'        // Funds taken from source, pending deposit
+  | 'completed'        // Successfully deposited to destination
+  | 'failed-deposit'   // Deposit failed after retries
+  | 'refunded'         // Funds returned to source
+```
+
+#### Actor Message Flow Diagram
+
+```
+User Input
+  ↓
+[TellerActor] ────────→ [BankActor]
+                          ↓
+                    Validation OK
+                          ↓
+                   [TransferCoordinator]
+                          ↓
+                    ┌─────┴─────┐
+                    ↓           ↓
+              [FromAccount]  [ToAccount]
+                    │           │
+              withdraw()    deposit()
+                    │           │
+                    ↓           ↓
+           [TransactionHistory (From)]
+           [TransactionHistory (To)]
+
+If Deposit Fails:
+  [TransferCoordinator]
+         ↓
+    Retry 1-3 times
+         ↓
+    If still fails
+         ↓
+   [FromAccount].refund()
+         ↓
+   [TransactionHistory (From)]
+```
+
+#### Benefits of This Design
+
+1. **Fault Tolerance** - Retries handle transient failures
+2. **Data Integrity** - Refunds ensure no money is lost
+3. **Auditability** - All steps recorded in transaction history
+4. **Resilience** - State machine can resume after crashes
+5. **Actor Model Purity** - Pure message passing, no shared state
+6. **Testability** - Each step is a separate, testable message handler
+
+#### Example Scenarios
+
+**Success:**
+```
+1. Withdraw $100 from Account-A ✓
+2. Record pending transfer ✓
+3. Deposit $100 to Account-B ✓
+4. Mark complete ✓
+Result: Transfer successful
+```
+
+**Failure with Retry:**
+```
+1. Withdraw $100 from Account-A ✓
+2. Record pending transfer ✓
+3. Deposit to Account-B ✗ (network error)
+4. Wait 1s, retry deposit ✓
+5. Mark complete ✓
+Result: Transfer successful (after 1 retry)
+```
+
+**Failure with Refund:**
+```
+1. Withdraw $100 from Account-A ✓
+2. Record pending transfer ✓
+3. Deposit to Account-B ✗ (account closed)
+4. Wait 1s, retry ✗
+5. Wait 2s, retry ✗
+6. Wait 4s, retry ✗
+7. Refund $100 to Account-A ✓
+8. Mark complete (status: refunded) ✓
+Result: Transfer failed, money returned
+```
+
+This demonstrates a production-ready transfer system using pure actor model patterns!
+
 ## Key Features
 
 ### Self-Messaging Pattern
@@ -166,10 +413,10 @@ This will build both the library and the example, then run the bank CLI.
 ║  6. View Transaction History           ║
 ║  7. List All Accounts                  ║
 ║  8. View Pending Transfers             ║
-║  9. Exit                               ║
+║  0. Exit                               ║
 ╚════════════════════════════════════════╝
 
-Enter choice (1-9): 1
+Enter choice (1-8 or 0): 1
 
 --- Create Account ---
 Owner name: Alice
