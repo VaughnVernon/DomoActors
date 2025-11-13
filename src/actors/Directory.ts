@@ -198,6 +198,22 @@ export class Directory {
   }
 
   /**
+   * Returns all actors in the directory.
+   * Used for stage shutdown to stop actors in proper order.
+   *
+   * @returns Array of all actor protocol instances
+   */
+  all(): ActorProtocol[] {
+    const actors: ActorProtocol[] = []
+    for (const bucket of this.buckets) {
+      for (const actor of bucket.values()) {
+        actors.push(actor)
+      }
+    }
+    return actors
+  }
+
+  /**
    * Returns configuration details for debugging/monitoring.
    */
   getConfig(): DirectoryConfig {
