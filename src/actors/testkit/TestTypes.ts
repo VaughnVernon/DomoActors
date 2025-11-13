@@ -136,7 +136,7 @@ export class TestActorProtocol extends LifeCycle implements ActorProtocol {
    * Creates a child actor (returns another TestActorProtocol).
    * @returns New test actor protocol instance
    */
-  childActorFor<T>(_protocol: Protocol, _definition: Definition): T {
+  childActorFor<T>(_protocol: Protocol, _definition: Definition, _supervisorName?: string): T {
     return new TestActorProtocol() as any
   }
 
