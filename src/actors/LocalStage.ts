@@ -372,6 +372,87 @@ export class LocalStage implements StageInternal {
 
 
   /**
+   * Closes the stage by stopping all actors in proper hierarchical order.
+   *
+   * Shutdown sequence:
+   * 1. Application parent actors (non-supervisor, non-root actors)
+   *    - Parent actors automatically stop their children when stop() is called
+   * 2. Application supervisor actors (custom supervisors)
+   * 3. System-level actors:
+   *    - PublicRootActor (__publicRoot)
+   *    - PrivateRootActor (__privateRoot)
+   *
+   * This ensures graceful shutdown with proper lifecycle hooks being called.
+   */
+  async close(): Promise<void> {
+    const allActors = this._directory.all()
+
+    // Categorize actors
+    const applicationParents: ActorProtocol[] = []
+    const supervisors: ActorProtocol[] = []
+    const rootActors: { publicRoot?: ActorProtocol; privateRoot?: ActorProtocol } = {}
+
+    for (const actor of allActors) {
+      const type = actor.type()
+
+      // System root actors
+      if (type === '__publicRoot') {
+        rootActors.publicRoot = actor
+      } else if (type === '__privateRoot') {
+        rootActors.privateRoot = actor
+      }
+      // Application supervisors (registered in _supervisors, excluding root actors)
+      else if (this._supervisors.has(type)) {
+        supervisors.push(actor)
+      }
+      // Application parent actors (everything else)
+      else {
+        applicationParents.push(actor)
+      }
+    }
+
+    // Phase 1: Stop application parent actors (they stop their children automatically)
+    this._logger.log('Stage: Stopping application actors...')
+    for (const actor of applicationParents) {
+      try {
+        await actor.stop()
+      } catch (error: any) {
+        this._logger.error(`Failed to stop actor ${actor.type()}: ${error.message}`, error)
+      }
+    }
+
+    // Phase 2: Stop application supervisors
+    this._logger.log('Stage: Stopping application supervisors...')
+    for (const supervisor of supervisors) {
+      try {
+        await supervisor.stop()
+      } catch (error: any) {
+        this._logger.error(`Failed to stop supervisor ${supervisor.type()}: ${error.message}`, error)
+      }
+    }
+
+    // Phase 3: Stop system actors (PublicRootActor, then PrivateRootActor)
+    this._logger.log('Stage: Stopping system actors...')
+    if (rootActors.publicRoot) {
+      try {
+        await rootActors.publicRoot.stop()
+      } catch (error: any) {
+        this._logger.error(`Failed to stop PublicRootActor: ${error.message}`, error)
+      }
+    }
+
+    if (rootActors.privateRoot) {
+      try {
+        await rootActors.privateRoot.stop()
+      } catch (error: any) {
+        this._logger.error(`Failed to stop PrivateRootActor: ${error.message}`, error)
+      }
+    }
+
+    this._logger.log('Stage: All actors stopped')
+  }
+
+  /**
    * Creates a bootstrap supervisor for PrivateRootActor.
    *
    * This is a non-actor supervisor used only during PrivateRootActor initialization,
