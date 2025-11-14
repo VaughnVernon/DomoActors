@@ -45,7 +45,12 @@
     "asynchronous",
     "event-driven",
     "ddd",
-    "domain-driven-design"
+    "domain-driven-design",
+    "deno",
+    "bun",
+    "cloudflare-workers",
+    "v8",
+    "runtime-agnostic"
   ],
   "author": "Vaughn Vernon",
   "license": "MPL-2.0",

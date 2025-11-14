@@ -141,8 +141,10 @@ npm run docs:serve
 
 ## Requirements
 
-- Node.js >= 18.0.0
-- TypeScript >= 5.0.0
+- **Runtimes**: Node.js >= 18.0.0, Deno, Bun, Cloudflare Workers, or any V8-based JavaScript runtime
+- **TypeScript**: >= 5.0.0 (for development)
+
+DomoActors has zero Node.js-specific dependencies and runs on any V8-compatible runtime.
 
 ## Documentation
 
