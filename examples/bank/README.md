@@ -380,11 +380,26 @@ Unlike simple examples that show atomic two-phase commits, this example demonstr
 
 ### Prerequisites
 
+If you've cloned the repository for local development, you need to set up local package linking first:
+
 ```bash
-# Build DomoActors
+# From the DomoActors-TS root directory
+
+# Install dependencies
 npm install
+
+# Set up local package linking (required for examples to import 'domo-actors')
+npm run install:local
+
+# Build the library
 npm run build
 ```
+
+**Why `npm run install:local`?**
+
+The example imports from `'domo-actors'` as if it were an installed npm package. Since you're developing locally, the package isn't installed from npm. The `install:local` command creates symlinks that allow the examples to import from your local development build.
+
+This only needs to be done once after cloning. The symlinks persist even after running `npm run clean`.
 
 ### Start the CLI
 

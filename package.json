@@ -21,6 +21,8 @@
     "build:examples": "tsc -p tsconfig.examples.json",
     "example:bank": "npm run build && tsx examples/bank/bank.ts",
     "example:encapsulation": "npm run build && tsx examples/EncapsulationDemo.ts",
+    "install:local": "npm link && npm link domo-actors",
+    "uninstall:local": "npm unlink domo-actors && npm unlink -g domo-actors",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

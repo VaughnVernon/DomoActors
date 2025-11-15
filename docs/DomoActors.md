@@ -84,6 +84,75 @@ const value = await counter.getValue()  // Returns: 2
 4. **Type Safety**: Full TypeScript support with generic types
 5. **Message-Driven**: All method calls become asynchronous messages
 
+## Development Setup
+
+### Setting Up for Local Development
+
+When developing DomoActors or running examples from the repository:
+
+```bash
+# Clone the repository
+git clone https://github.com/VaughnVernon/DomoActors-TS.git
+cd DomoActors-TS
+
+# Install dependencies
+npm install
+
+# Set up local package linking (required for examples)
+npm run install:local
+
+# Build the library
+npm run build
+
+# Run tests
+npm test
+
+# Run examples
+npm run example:bank
+npm run example:encapsulation
+```
+
+**Important**: The `npm run install:local` command is required to link the local `domo-actors` package so that examples can import it. This creates symlinks in `node_modules/` that point to your development build in `dist/`.
+
+### Local Package Linking Explained
+
+When you clone the repository and want to run examples, the examples import from `'domo-actors'` as if it were an installed npm package. However, you're developing the package itself, so it's not installed from npm.
+
+The solution is `npm link`, which creates symlinks:
+
+1. **Global symlink**: Created in your npm global directory pointing to this project
+2. **Local symlink**: Created in `node_modules/domo-actors` pointing back to the project root
+
+This allows the examples to import from `'domo-actors'` while using your local development code.
+
+**Symlink locations:**
+- Local: `node_modules/domo-actors` → `..` (project root)
+- Global: `~/.nvm/versions/node/vX.X.X/lib/node_modules/domo-actors` → (project path)
+
+**Commands:**
+- `npm run install:local` - Sets up the symlinks
+- `npm run uninstall:local` - Removes the symlinks
+- `npm run clean` - Removes build artifacts (does NOT remove symlinks)
+
+### Development Workflow
+
+```bash
+# Make changes to source code in src/
+
+# Rebuild the library
+npm run build
+
+# Run tests to verify changes
+npm test
+
+# Try the examples
+npm run example:bank
+
+# Generate and view documentation
+npm run docs
+npm run docs:serve
+```
+
 ### Creating Child Actors
 
 Actors can create and manage child actors, forming a hierarchy:

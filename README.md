@@ -139,6 +139,44 @@ npm run docs
 npm run docs:serve
 ```
 
+## Development
+
+### Setting Up for Local Development
+
+When developing DomoActors or running examples from the repository:
+
+```bash
+# Clone the repository
+git clone https://github.com/VaughnVernon/DomoActors-TS.git
+cd DomoActors-TS
+
+# Install dependencies
+npm install
+
+# Set up local package linking (required for examples)
+npm run install:local
+
+# Build the library
+npm run build
+
+# Run tests
+npm test
+
+# Run examples
+npm run example:bank
+npm run example:encapsulation
+```
+
+**Note**: The `npm run install:local` command is required to link the local `domo-actors` package so that examples can import it. This creates symlinks in `node_modules/` that point to your development build.
+
+### Uninstalling Local Links
+
+If you need to remove the local package links:
+
+```bash
+npm run uninstall:local
+```
+
 ## Requirements
 
 - **Runtimes**: Node.js >= 18.0.0, Deno, Bun, Cloudflare Workers, or any V8-based JavaScript runtime
