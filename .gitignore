@@ -30,6 +30,9 @@ docs/api/
 *.swo
 *~
 
+# Tools
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db
