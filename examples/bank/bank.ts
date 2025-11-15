@@ -52,7 +52,7 @@ function prompt(question: string): Promise<string> {
 async function showMenu(): Promise<void> {
   console.log('\n')
   console.log('╔════════════════════════════════════════╗')
-  console.log('║       DomoActors Bank Example          ║')
+  console.log('║     DomoActors-TS Bank Example         ║')
   console.log('╠════════════════════════════════════════╣')
   console.log('║  1. Open Account                       ║')
   console.log('║  2. Deposit Funds                      ║')
