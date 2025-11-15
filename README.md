@@ -2,6 +2,14 @@
 
 Actor Model toolkit for TypeScript: Fault-tolerant, message-driven concurrency.
 
+[![License: RPL-1.5](https://img.shields.io/badge/License-RPL--1.5-blue.svg)](https://opensource.org/license/rpl-1-5)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
+[![npm version](https://img.shields.io/npm/v/domo-actors.svg)](https://www.npmjs.com/package/domo-actors)
+[![V8](https://img.shields.io/badge/V8-Compatible-orange.svg)](https://v8.dev/)
+[![Runtimes](https://img.shields.io/badge/Runtimes-Browser%20%7C%20Node.js%20%7C%20Cloudflare%20%7C%20Deno%20%7C%20Bun-blue.svg)](https://github.com/VaughnVernon/DomoActors-TS#requirements)
+[![npm downloads](https://img.shields.io/npm/dt/domo-actors.svg)](https://www.npmjs.com/package/domo-actors)
+[![GitHub stars](https://img.shields.io/github/stars/VaughnVernon/DomoActors-TS.svg)](https://github.com/VaughnVernon/DomoActors-TS/stargazers)
+
 ## Overview
 
 DomoActors provides a robust implementation of the Actor Model for TypeScript, enabling you to build concurrent, distributed, and fault-tolerant applications. Built on proven patterns from Reactive Architecture and Domain-Driven Design, DomoActors brings the power of message-driven actors to the TypeScript ecosystem.
