@@ -55,7 +55,7 @@
     "runtime-agnostic"
   ],
   "author": "Vaughn Vernon",
-  "license": "MPL-2.0",
+  "license": "RPL-1.5",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/VaughnVernon/DomoActors-TS.git"
